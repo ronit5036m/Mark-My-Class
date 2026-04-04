@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import ConfirmModal from "../../../components/Models/ConfirmModal";
 import "react-loading-skeleton/dist/skeleton.css";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
-import { BarChart2, ChartNoAxesCombined, Filter } from "lucide-react";
+import { BarChart2, ChartNoAxesCombined, CopyIcon, Filter } from "lucide-react";
 
 const TeacherAttendance = () => {
   const [stats, setStats] = useState([]);
@@ -36,13 +36,13 @@ const TeacherAttendance = () => {
       const res = await axiosInstance.post(
         `/session/end`,
         { sessionId },
-        { headers: { Authorization: `Bearer ${authToken}` } }
+        { headers: { Authorization: `Bearer ${authToken}` } },
       );
       toast.success(res.data.message || "Session ended!");
       setStats((prev) =>
         prev.map((s) =>
-          s.sessionId === sessionId ? { ...s, status: "inactive" } : s
-        )
+          s.sessionId === sessionId ? { ...s, status: "inactive" } : s,
+        ),
       );
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to end session.");
@@ -78,7 +78,7 @@ const TeacherAttendance = () => {
       try {
         const res = await axiosInstance.get(
           `/user/teacher/${teacherId}/attendance-stats`,
-          { headers: { Authorization: `Bearer ${authToken}` } }
+          { headers: { Authorization: `Bearer ${authToken}` } },
         );
         setStats(res.data.stats || []);
       } catch {
@@ -98,10 +98,19 @@ const TeacherAttendance = () => {
       return stats.filter((s) => s.status === "inactive");
     if (filterValue === "recent")
       return [...stats].sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
       );
     return stats;
   }, [stats, filterValue]);
+
+  const handleCopy = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied to clipboard!");
+    } catch (err) {
+      toast.error("Failed to copy: ", err);
+    }
+  };
 
   return (
     <>
@@ -224,7 +233,18 @@ const TeacherAttendance = () => {
                       key={stat.sessionId}
                       className="border-b border-neutral-300 hover:bg-orange-50 transition-colors"
                     >
-                      <td className="py-3 px-4">{stat.sessionId}</td>
+                      <td
+                        className="py-3 px-4 cursor-pointer group"
+                        onClick={() => handleCopy(stat.sessionId)}
+                        title="Copy Session ID"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{stat.sessionId.slice(0, 8)}...</span>
+                          <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-neutral-400 hover:text-neutral-600 flex items-center">
+                            <CopyIcon size={20} />
+                          </span>
+                        </div>
+                      </td>
                       <td className="py-3 px-4">{stat.className}</td>
                       <td className="py-3 px-4">
                         {new Date(stat.createdAt).toLocaleString()}
@@ -241,80 +261,80 @@ const TeacherAttendance = () => {
                       >
                         {stat.status}
                       </td>
-                      <td className="py-3 px-4 text-center flex justify-center gap-2">
-                        {stat.status !== "inactive" && (
+                      <td className="py-3 px-4 align-middle">
+                        <div className="flex justify-center items-center gap-2">
+                          {stat.status !== "inactive" && (
+                            <button
+                              onClick={() => {
+                                setConfirmOpen(true);
+                                setConfirmConfig({
+                                  title: "End Class",
+                                  message:
+                                    "Are you sure you want to end this session?",
+                                  type: "warning",
+                                });
+                                setConfirmAction(
+                                  () => () => endSession(stat.sessionId),
+                                );
+                              }}
+                              className="relative bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-6 rounded-md font-semibold transition flex justify-center items-center min-w-[100px]"
+                              disabled={
+                                actionLoading.endId === stat.sessionId ||
+                                actionLoading.deleteId === stat.sessionId
+                              }
+                            >
+                              <span
+                                className={`transition-opacity ${
+                                  actionLoading.endId === stat.sessionId
+                                    ? "opacity-0"
+                                    : "opacity-100"
+                                }`}
+                              >
+                                End
+                              </span>
+                              {actionLoading.endId === stat.sessionId && (
+                                <div className="absolute w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              )}
+                            </button>
+                          )}
+
                           <button
                             onClick={() => {
                               setConfirmOpen(true);
                               setConfirmConfig({
-                                title: "End Class",
+                                title: "Delete Class",
                                 message:
-                                  "Are you sure you want to end this session?",
-                                type: "warning",
+                                  "Are you sure you want to delete this session? This cannot be undone.",
+                                type: "danger",
                               });
                               setConfirmAction(
-                                () => () => endSession(stat.sessionId)
+                                () => () => deleteSession(stat.sessionId),
                               );
                             }}
-                            className="bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-8 rounded-md font-semibold transition flex justify-center items-center"
+                            className={`relative ${
+                              stat.status === "inactive"
+                                ? "w-full max-w-[208px]"
+                                : "min-w-[100px]"
+                            } bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded-md font-semibold transition flex justify-center items-center`}
                             disabled={
-                              actionLoading.endId === stat.sessionId ||
-                              actionLoading.deleteId === stat.sessionId
+                              actionLoading.deleteId === stat.sessionId ||
+                              actionLoading.endId === stat.sessionId
                             }
                           >
                             <span
                               className={`transition-opacity ${
-                                actionLoading.endId === stat.sessionId
+                                actionLoading.deleteId === stat.sessionId
                                   ? "opacity-0"
                                   : "opacity-100"
                               }`}
                             >
-                              End
+                              Delete
                             </span>
-                            {actionLoading.endId === stat.sessionId && (
-                              <>
-                                <div className="absolute w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                              </>
+                            {actionLoading.deleteId === stat.sessionId && (
+                              <div className="absolute w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                             )}
                           </button>
-                        )}
-
-                        <button
-                          onClick={() => {
-                            setConfirmOpen(true);
-                            setConfirmConfig({
-                              title: "Delete Class",
-                              message:
-                                "Are you sure you want to delete this session? This cannot be undone.",
-                              type: "danger",
-                            });
-                            setConfirmAction(
-                              () => () => deleteSession(stat.sessionId)
-                            );
-                          }}
-                          className={`${
-                            stat.status === "inactive" ? "w-full" : ""
-                          } relative bg-red-500 hover:bg-red-600 text-white py-2 px-8 rounded-md font-semibold transition flex justify-center items-center`}
-                          disabled={
-                            actionLoading.deleteId === stat.sessionId ||
-                            actionLoading.endId === stat.sessionId
-                          }
-                        >
-                          <span
-                            className={`transition-opacity ${
-                              actionLoading.deleteId === stat.sessionId
-                                ? "opacity-0"
-                                : "opacity-100"
-                            }`}
-                          >
-                            Delete
-                          </span>
-                          {actionLoading.deleteId === stat.sessionId && (
-                            <>
-                              <div className="absolute w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            </>
-                          )}
-                        </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -356,8 +376,19 @@ const TeacherAttendance = () => {
                       {stat.totalMarked}
                     </p>
                     <p className="text-gray-600 text-sm">
-                      <span className="font-medium">Session id:</span>{" "}
-                      {stat.sessionId}
+                      <div className="text-gray-600 text-sm">
+                        <div
+                          className="flex items-center gap-2 group cursor-pointer w-fit"
+                          onClick={() => handleCopy(stat.sessionId)}
+                          title="Copy Session ID"
+                        >
+                          <span className="font-medium">Session id:</span>{" "}
+                          {stat.sessionId}
+                          <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-neutral-400 hover:text-neutral-600 flex items-center">
+                            <CopyIcon size={16} />
+                          </span>
+                        </div>
+                      </div>
                     </p>
                     <div className="flex gap-2 mt-2">
                       {stat.status !== "inactive" && (
@@ -371,7 +402,7 @@ const TeacherAttendance = () => {
                               type: "warning",
                             });
                             setConfirmAction(
-                              () => () => endSession(stat.sessionId)
+                              () => () => endSession(stat.sessionId),
                             );
                           }}
                           disabled={
@@ -401,7 +432,7 @@ const TeacherAttendance = () => {
                             type: "danger",
                           });
                           setConfirmAction(
-                            () => () => deleteSession(stat.sessionId)
+                            () => () => deleteSession(stat.sessionId),
                           );
                         }}
                         disabled={

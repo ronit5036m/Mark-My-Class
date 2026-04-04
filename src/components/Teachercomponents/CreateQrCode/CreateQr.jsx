@@ -31,11 +31,6 @@ const CreateQr = () => {
     delete: "",
   });
 
-  useEffect(() => {
-    actionMessage.delete = "";
-    actionMessage.end = "";
-  }, [actionMessage, setActionMessage]);
-
   const { authToken, CurrentUser } = useAuth();
   const qrRef = useRef(null);
   const teacherId = CurrentUser?.existuser?._id;
@@ -48,7 +43,7 @@ const CreateQr = () => {
           `/user/teacher/${teacherId}/subjects`,
           {
             headers: { Authorization: `Bearer ${authToken}` },
-          }
+          },
         );
         setSubjects(res.data.subjects || []);
 
@@ -57,7 +52,7 @@ const CreateQr = () => {
           setDepartment(res.data.subjects[0].department || "");
         } else {
           setError(
-            "No subjects assigned. Please contact admin or add subjects for this teacher."
+            "No subjects assigned. Please contact admin or add subjects for this teacher.",
           );
         }
       } catch (err) {
@@ -67,7 +62,7 @@ const CreateQr = () => {
     fetchSubjects();
   }, [teacherId, authToken]);
 
-  // Update Input filed selected subject's
+  // Update Input field selected subject's
   useEffect(() => {
     if (subjectId) {
       const selectedSubject = subjects.find((s) => s._id === subjectId);
@@ -88,7 +83,7 @@ const CreateQr = () => {
         },
         () => {
           setError("Failed to get location.");
-        }
+        },
       );
     } else {
       setError("Geolocation is not supported by this browser.");
@@ -115,7 +110,7 @@ const CreateQr = () => {
         },
         {
           headers: { Authorization: `Bearer ${authToken}` },
-        }
+        },
       );
       setQrImage(res.data.qrImage);
       setSession(res.data.session);
@@ -123,14 +118,14 @@ const CreateQr = () => {
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Failed to create session. Make sure all fields are correct."
+          "Failed to create session. Make sure all fields are correct.",
       );
     } finally {
       setLoading(false);
     }
   };
 
-  //  End session
+  // End session
   const handleEndSession = async () => {
     if (!session?.sessionId) return;
     setActionLoading((prev) => ({ ...prev, end: true }));
@@ -140,7 +135,7 @@ const CreateQr = () => {
       const res = await axiosInstance.post(
         `/session/end`,
         { sessionId: session.sessionId },
-        { headers: { Authorization: `Bearer ${authToken}` } }
+        { headers: { Authorization: `Bearer ${authToken}` } },
       );
       setActionMessage((prev) => ({
         ...prev,
@@ -222,11 +217,11 @@ const CreateQr = () => {
     }
   };
 
-  const handelCopySession = () => {
+  const handleCopySession = async () => {
     if (!session?.sessionId) return;
     try {
       setCopying(true);
-      navigator.clipboard.writeText(session?.sessionId);
+      await navigator.clipboard.writeText(session?.sessionId);
       toast.success("Session copied to clipboard!");
     } catch (_) {
       toast.error("Failed to copy Session");
@@ -242,158 +237,162 @@ const CreateQr = () => {
       {/* Sidebar */}
       <Sidebar />
 
-      {/* Main Content */}
-      <div className="flex-1 p-6 overflow-y-auto mb-15 md:mb-0">
-        <h1 className="text-3xl font-bold text-orange-600 mb-6 flex items-center gap-x-2">
-          <QrCode size={35} /> Create Session QR Code
-        </h1>
-        
-        {/* Form Card */}
-        <div className="bg-white border border-orange-200 p-6 rounded-2xl shadow-lg max-w-3xl">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Class Name (readonly) */}
-            <div>
-              <label className="block text-orange-500 font-medium mb-1">
-                Class Name
-              </label>
-              <input
-                type="text"
-                value={className}
-                readOnly
-                placeholder="Class name will auto-fill from selected subject"
-                className="w-full border border-orange-300 rounded-lg px-3 py-2 bg-orange-50 text-gray-600 cursor-auto outline-none"
-              />
-            </div>
+      {/* Main Content - Centered */}
+      <div className="flex-1 p-6 overflow-y-auto mb-15 md:mb-0 flex flex-col items-center justify-center">
+        <div className="w-full max-w-3xl">
+          <h1 className="text-3xl font-bold text-orange-600 mb-6 flex items-center gap-x-2">
+            <QrCode size={35} /> Create Session QR Code
+          </h1>
 
-            {/* Department (readonly) */}
-            <div>
-              <label className="block text-orange-500 font-medium mb-1">
-                Department
-              </label>
-              <input
-                type="text"
-                value={department}
-                readOnly
-                placeholder="Department will be auto-filled"
-                className="w-full border border-orange-300 rounded-lg px-3 py-2 bg-orange-50 text-gray-600 cursor-auto outline-none"
-              />
-            </div>
+          {/* Form Card */}
+          <div className="bg-white border border-orange-200 p-6 rounded-2xl shadow-lg w-full">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Class Name (readonly) */}
+              <div>
+                <label className="block text-orange-500 font-medium mb-1">
+                  Class Name
+                </label>
+                <input
+                  type="text"
+                  value={className}
+                  readOnly
+                  placeholder="Class name will auto-fill from selected subject"
+                  className="w-full border border-orange-300 rounded-lg px-3 py-2 bg-orange-50 text-gray-600 cursor-auto outline-none"
+                />
+              </div>
 
-            {/* Subject Select */}
-            <div>
-              <label className="block text-orange-500 font-medium mb-1">
-                Subject
-              </label>
-              <select
-                value={subjectId}
-                onChange={(e) => setSubjectId(e.target.value)}
-                required
-                disabled={subjectSelectDisabled || loading}
-                className="w-full border border-orange-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none disabled:bg-orange-50"
+              {/* Department (readonly) */}
+              <div>
+                <label className="block text-orange-500 font-medium mb-1">
+                  Department
+                </label>
+                <input
+                  type="text"
+                  value={department}
+                  readOnly
+                  placeholder="Department will be auto-filled"
+                  className="w-full border border-orange-300 rounded-lg px-3 py-2 bg-orange-50 text-gray-600 cursor-auto outline-none"
+                />
+              </div>
+
+              {/* Subject Select */}
+              <div>
+                <label className="block text-orange-500 font-medium mb-1">
+                  Subject
+                </label>
+                <select
+                  value={subjectId}
+                  onChange={(e) => setSubjectId(e.target.value)}
+                  required
+                  disabled={subjectSelectDisabled || loading}
+                  className="w-full border border-orange-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none disabled:bg-orange-50"
+                >
+                  <option value="">Select Subject</option>
+                  {subjects.map((subj) => (
+                    <option key={subj._id} value={subj._id}>
+                      {subj.subjectName}
+                    </option>
+                  ))}
+                </select>
+                {subjectSelectDisabled && (
+                  <p className="text-red-500 text-sm mt-1">
+                    No subjects available. Please ask the admin to assign
+                    subjects.
+                  </p>
+                )}
+              </div>
+
+              {/* Location Inputs */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-orange-500 font-medium mb-1">
+                    Latitude
+                  </label>
+                  <input
+                    type="text"
+                    value={lat}
+                    required
+                    onChange={(e) => !locationLocked && setLat(e.target.value)}
+                    placeholder="Mandatory"
+                    readOnly={locationLocked}
+                    className="w-full border border-orange-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-orange-500 font-medium mb-1">
+                    Longitude
+                  </label>
+                  <input
+                    type="text"
+                    value={lng}
+                    required
+                    onChange={(e) => !locationLocked && setLng(e.target.value)}
+                    placeholder="Mandatory"
+                    readOnly={locationLocked}
+                    className="w-full border border-orange-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Get Location Button */}
+              <button
+                type="button"
+                onClick={handleGetLocation}
+                disabled={locationLocked}
+                className={`w-full py-2 rounded-lg font-semibold transition ${
+                  locationLocked
+                    ? "bg-orange-500/95 text-white cursor-default"
+                    : "bg-orange-500 text-white hover:bg-orange-600"
+                }`}
               >
-                <option value="">Select Subject</option>
-                {subjects.map((subj) => (
-                  <option key={subj._id} value={subj._id}>
-                    {subj.subjectName}
-                  </option>
-                ))}
-              </select>
-              {subjectSelectDisabled && (
-                <p className="text-red-500 text-sm mt-1">
-                  No subjects available. Please ask the admin to assign
-                  subjects.
-                </p>
-              )}
-            </div>
+                {locationLocked ? "Location Locked" : "Get Current Location"}
+              </button>
 
-            {/* Location Inputs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-orange-500 font-medium mb-1">
-                  Latitude
-                </label>
-                <input
-                  type="text"
-                  value={lat}
-                  required
-                  onChange={(e) => !locationLocked && setLat(e.target.value)}
-                  placeholder="Mandatory"
-                  readOnly={locationLocked}
-                  className="w-full border border-orange-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-orange-500 font-medium mb-1">
-                  Longitude
-                </label>
-                <input
-                  type="text"
-                  value={lng}
-                  required
-                  onChange={(e) => !locationLocked && setLng(e.target.value)}
-                  placeholder="Mandatory"
-                  readOnly={locationLocked}
-                  className="w-full border border-orange-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
-                />
-              </div>
-            </div>
-
-            {/* Get Location Button */}
-            <button
-              type="button"
-              onClick={handleGetLocation}
-              disabled={locationLocked}
-              className={`w-full py-2 rounded-lg font-semibold transition ${
-                locationLocked
-                  ? "bg-orange-500/95 text-white cursor-default"
-                  : "bg-orange-500 text-white hover:bg-orange-600"
-              }`}
-            >
-              {locationLocked ? "Location Locked" : "Get Current Location"}
-            </button>
-
-            {/* WiFi Check */}
-            <div
-              className="flex items-center gap-2 cursor-pointer select-none"
-              onClick={() => !loading && setWifiCheckEnabled(!wifiCheckEnabled)}
-            >
+              {/* WiFi Check */}
               <div
-                className={`w-5 h-5 flex items-center justify-center rounded border transition-colors
+                className="flex items-center gap-2 cursor-pointer select-none"
+                onClick={() =>
+                  !loading && setWifiCheckEnabled(!wifiCheckEnabled)
+                }
+              >
+                <div
+                  className={`w-5 h-5 flex items-center justify-center rounded border transition-colors
           ${
             wifiCheckEnabled
               ? "bg-orange-500 border-orange-500 text-white"
               : "border-gray-400 text-transparent"
           }`}
-              >
-                {wifiCheckEnabled && <Check size={16} />}
+                >
+                  {wifiCheckEnabled && <Check size={16} />}
+                </div>
+                <span
+                  className={`${
+                    wifiCheckEnabled ? "text-orange-500" : "text-gray-500"
+                  }`}
+                >
+                  Enable WiFi Check
+                </span>
               </div>
-              <span
-                className={`${
-                  wifiCheckEnabled ? "text-orange-500" : "text-gray-500"
-                }`}
+
+              {/* Generate Button */}
+              <button
+                className="bg-orange-500 font-semibold text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
               >
-                Enable WiFi Check
-              </span>
-            </div>
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Generate QR Code"
+                )}
+              </button>
+            </form>
 
-            {/* Generate Button */}
-            <button
-              className="bg-orange-500 font-semibold text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                "Generate QR Code"
-              )}
-            </button>
-          </form>
-
-          {/* Error Message */}
-          {error && <p className="text-red-500 mt-4 text-sm">{error}</p>}
+            {/* Error Message */}
+            {error && <p className="text-red-500 mt-4 text-sm">{error}</p>}
+          </div>
         </div>
 
         {/* QR Modal */}
@@ -430,7 +429,7 @@ const CreateQr = () => {
                     <span>Share QR</span>
                   </button>
                   <button
-                    onClick={handelCopySession}
+                    onClick={handleCopySession}
                     title="Copy QR Session"
                     className="p-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center"
                   >
