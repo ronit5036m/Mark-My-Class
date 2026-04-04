@@ -58,7 +58,7 @@ define(['exports'], (function (exports) { 'use strict';
         const styles = [`background: ${methodToColorMap[method]}`, `border-radius: 0.5em`, `color: white`, `font-weight: bold`, `padding: 2px 0.5em`];
         // When in a group, the workbox prefix is not displayed.
         const logPrefix = inGroup ? [] : ['%cworkbox', styles.join(';')];
-        // console[method](...logPrefix, ...args);
+        console[method](...logPrefix, ...args);
         if (method === 'groupCollapsed') {
           inGroup = true;
         }

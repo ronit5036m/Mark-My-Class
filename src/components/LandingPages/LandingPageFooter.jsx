@@ -13,16 +13,16 @@ export default function LandingPageFooter() {
       <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-8 flex flex-col lg:flex-row items-center justify-between gap-10 lg:gap-16 text-center lg:text-left">
         {/* Left: Profile/Logo */}
         <div className="mb-6 lg:mb-0 flex-shrink-0 flex flex-col items-center lg:items-start">
-          <div className="bg-gradient-to-br from-orange-400/30 via-white/60 to-blue-400/20 p-1 rounded-2xl shadow-[0_6px_32px_rgba(255,100,42,0.13)]">
+          <div className="bg-gradient-to-br  p-1 rounded-2xl shadow-[0_6px_32px_rgba(255,100,42,0.13)]">
             <img
-              src={Image.image10}
+              src={Image.logo}
               alt="Profile"
               className="w-[80px] h-[100px] sm:w-[100px] sm:h-[120px] md:w-[120px] md:h-[140px] object-cover rounded-xl shadow-[0_4px_24px_rgba(255,100,42,0.13)]"
             />
           </div>
-          <span className="mt-3 text-xs text-[#20416b] font-semibold tracking-widest uppercase opacity-70">
+          {/* <span className="mt-3 text-xs text-[#20416b] font-semibold tracking-widest uppercase opacity-70">
             Mark-MyClass
-          </span>
+          </span> */}
         </div>
         {/* Center: Socials & Links */}
         <div className="flex-1 flex flex-col items-center lg:items-start">
