@@ -506,6 +506,9 @@ function dataURLtoBlob(dataurl) {
   return new Blob([u8arr], { type: mime });
 }
 
+// Utility: Delay to allow hardware release
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const ScanQr = () => {
   // State
   const [code, setCode] = useState("");
@@ -571,11 +574,10 @@ const ScanQr = () => {
         // 2 = SCANNING
         await html5QrCodeRef.current.stop();
       }
-      await html5QrCodeRef.current.clear();
+      html5QrCodeRef.current.clear();
     } catch (err) {
       console.warn("QR Scanner stop error:", err);
     } finally {
-      html5QrCodeRef.current = null;
       setScanning(false);
     }
   };
@@ -610,37 +612,42 @@ const ScanQr = () => {
     await openFrontCamera();
   };
 
-  // Camera scan (back camera) for QR
+  // Camera scan (back camera) for QR - FIXED FOR NOT READABLE ERROR
   const startCameraScan = async () => {
     await stopFrontCamera();
+
+    // Crucial: Give mobile hardware 300ms to fully release any previous camera locks
+    await delay(300);
+
     setScanning(true);
     try {
-      const cameras = await Html5Qrcode.getCameras();
-      if (!cameras?.length) {
-        showModal("error", "No camera found on this device.");
-        setScanning(false);
-        return;
-      }
-
-      let cameraId = cameras[0].id;
-      const backCamera = cameras.find(
-        (cam) => cam.label && /back|environment/i.test(cam.label),
-      );
-      if (backCamera) cameraId = backCamera.id;
-
       if (!html5QrCodeRef.current) {
         html5QrCodeRef.current = new Html5Qrcode("qr-reader-region");
       }
 
+      // Instead of getCameras(), rely on the browser's facingMode logic to avoid hardware permission locking
       await html5QrCodeRef.current.start(
-        { deviceId: { exact: cameraId } },
+        { facingMode: "environment" },
         { fps: 10, qrbox: { width: 250, height: 250 } },
         async (decodedText) => {
+          // Pause scanning immediately so it doesn't fire multiple times
+          if (html5QrCodeRef.current.getState() === 2) {
+            html5QrCodeRef.current.pause();
+          }
           await handleQrFound(decodedText);
         },
       );
     } catch (err) {
-      showModal("error", "Unable to access camera: " + (err?.message || err));
+      console.error("Camera Start Error:", err);
+      let errorMsg = err?.message || err;
+
+      // Friendly message for the specific hardware lock issue
+      if (String(errorMsg).includes("NotReadableError")) {
+        errorMsg =
+          "Your camera is currently in use by another app or background tab. Please close other apps and try again.";
+      }
+
+      showModal("error", `Camera Error: ${errorMsg}`);
       setScanning(false);
     }
   };
@@ -648,6 +655,10 @@ const ScanQr = () => {
   // Selfie capture (front camera)
   const openFrontCamera = async () => {
     await stopCameraScan();
+
+    // Crucial: Give hardware time to release the back camera before opening the front one
+    await delay(300);
+
     setCapturedImage(null);
     setCameraOpen(true);
     try {
@@ -658,10 +669,11 @@ const ScanQr = () => {
         videoRef.current.srcObject = stream;
       }
     } catch (err) {
-      showModal(
-        "error",
-        "Unable to access front camera: " + (err?.message || err),
-      );
+      let errorMsg = err?.message || err;
+      if (String(errorMsg).includes("NotReadableError")) {
+        errorMsg = "Your front camera is in use by another application.";
+      }
+      showModal("error", `Camera Error: ${errorMsg}`);
       setCameraOpen(false);
     }
   };
