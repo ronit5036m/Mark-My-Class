@@ -449,7 +449,7 @@ const CreateQr = () => {
                       <span className="font-medium text-gray-700">
                         Session ID:
                       </span>{" "}
-                      {*/{session.sessionId}*/}
+                      {/* {session.sessionId} */}
                     </div>
                     <div>
                       <span className="font-medium text-gray-700">Class:</span>{" "}
