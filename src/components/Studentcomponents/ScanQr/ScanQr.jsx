@@ -358,9 +358,9 @@ const ScanQr = () => {
                 "Submit"
               )}
             </button>
-          </div>
+          </div> */}
         </div>
-      </div> */}
+      </div> 
 
       {/* Selfie/Gallery Modal */}
       {cameraOpen && (
