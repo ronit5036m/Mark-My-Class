@@ -445,12 +445,12 @@ const CreateQr = () => {
                     Session Details
                   </h4>
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div>
+                    {/*<div>
                       <span className="font-medium text-gray-700">
                         Session ID:
                       </span>{" "}
-                      {/* {session.sessionId} */}
-                    </div>
+                       {session.sessionId} 
+                    </div>*/}
                     <div>
                       <span className="font-medium text-gray-700">Class:</span>{" "}
                       {className}
