@@ -328,7 +328,7 @@ const ScanQr = () => {
             )}
           </div>
           {/* Manual QR entry */}
-          <div className="mt-6 w-full">
+          {/* <div className="mt-6 w-full">
             <label
               className="block text-gray-700 mb-2 text-sm"
               htmlFor="manual-qr"
@@ -360,7 +360,7 @@ const ScanQr = () => {
             </button>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Selfie/Gallery Modal */}
       {cameraOpen && (
